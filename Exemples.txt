@@ -1,0 +1,136 @@
+Understanding ft_read_file Function
+================================
+
+1. bytes_read Variable:
+-------------------
+- bytes_read stores the number of bytes read from the file in each read() call
+- read() function returns:
+  * Positive number (1 to BUFFER_SIZE): number of bytes successfully read
+  * 0: when it reaches the end of file (EOF)
+  * -1: when an error occurs
+
+2. Reading Process Example:
+------------------------
+Let's say we have a file containing: "Hello\nWorld" and BUFFER_SIZE is 3
+
+Initial state:
+stash = "" (empty)
+buffer = space for 3 chars + null terminator
+
+First iteration:
+read() reads: "Hel"
+bytes_read = 3
+buffer = "Hel\0"
+stash + buffer = "Hel"
+
+Second iteration:
+read() reads: "lo\n"
+bytes_read = 3
+buffer = "lo\n\0"
+stash + buffer = "Hello\n"
+
+At this point, the loop stops because we found '\n'
+
+3. Why Join and Free?
+------------------
+The process:
+temp = ft_strjoin(*stash, buffer);
+free(*stash);
+*stash = temp;
+
+This is necessary because:
+- We can't append to stash directly in C (strings are immutable)
+- ft_strjoin creates a new string containing both stash and buffer
+- The old stash memory must be freed to prevent memory leaks
+- temp holds the new combined string, which becomes the new stash
+
+Example:
+Step 1:
+stash = "Hel"
+buffer = "lo\n"
+temp = ft_strjoin(stash, buffer) → creates "Hello\n"
+
+Step 2:
+free(stash) → frees "Hel"
+
+Step 3:
+stash = temp → stash now points to "Hello\n"
+
+4. Why We Need a Stash:
+--------------------
+- The stash acts as persistent storage between reads
+- Since BUFFER_SIZE might not align with line endings, we need to keep leftover data
+- Example with BUFFER_SIZE = 3:
+
+File content: "Hello\nWorld"
+Read 1: "Hel" → store in stash
+Read 2: "lo\n" → append to stash, now have "Hello\n"
+Read 3: "Wor" → this will be the start of next line
+Read 4: "ld" → completes the second line
+
+5. Complete Flow:
+--------------
+while (bytes_read > 0 && !ft_strchr(*stash, '\n'))
+{
+    // Read up to BUFFER_SIZE bytes
+    bytes_read = read(fd, buffer, BUFFER_SIZE);
+    if (bytes_read == -1)
+        return (NULL);  // Error in reading
+
+    // Null terminate the buffer
+    buffer[bytes_read] = '\0';
+
+    // Combine old stash with new buffer
+    temp = ft_strjoin(*stash, buffer);
+    free(*stash);  // Free old stash
+    *stash = temp; // Update stash with combined content
+}
+
+The loop continues until either:
+1. We find a newline character (\n) in the stash
+2. We reach the end of the file (bytes_read becomes 0)
+3. An error occurs (bytes_read becomes -1)
+
+This way, the function accumulates data in the stash until it has at least one complete line (ending with \n) or reaches the end of the file. The actual line extraction is then handled by other functions (ft_extract_line and ft_process_line).
+
+===========================================================================================================================
+
+6. Why char ** for stash:
+----------------------
+The reason stash needs to be a char ** (double pointer) in ft_read_file is because we need to modify the original stash pointer that's in the get_next_line function.
+
+In C, when you pass a pointer to a function, you're passing it by value. This means:
+
+// In get_next_line:
+static char *stash;
+
+// If ft_read_file took char *stash:
+ft_read_file(fd, stash);
+// Any changes to stash inside ft_read_file would not affect
+// the original stash in get_next_line
+
+By using char **stash, we can modify the original pointer:
+// When we do this in ft_read_file:
+temp = ft_strjoin(*stash, buffer);
+free(*stash);    // Free the old content
+*stash = temp;   // Update the original pointer
+
+Here's a simple analogy:
+void wrong_way(char *ptr) {
+    free(ptr);           // Frees the memory
+    ptr = strdup("new"); // Only changes local ptr, original unchanged
+}
+
+void correct_way(char **ptr) {
+    free(*ptr);           // Frees the memory
+    *ptr = strdup("new"); // Changes the original pointer
+}
+
+int main() {
+    char *str = strdup("old");
+
+    wrong_way(str);   // str is still "old" (or freed memory)
+    correct_way(&str); // str is now "new"
+}
+
+This is similar to how you need to use int * when you want a function to modify an int variable in the caller's scope. Here we need char ** because we want to modify a char * in the caller's scope.
