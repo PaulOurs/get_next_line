@@ -2,3 +2,5 @@
 Program
 test_gnl
 test2
+*.gch
+*.out
