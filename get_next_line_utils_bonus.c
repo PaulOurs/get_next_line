@@ -6,10 +6,9 @@
 /*   By: paubello <paubello@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/20 02:22:06 by paubello          #+#    #+#             */
-/*   Updated: 2024/11/20 02:24:58 by paubello         ###   ########.fr       */
+/*   Updated: 2024/12/18 15:49:45 by paubello         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 
 #include "get_next_line_bonus.h"
 

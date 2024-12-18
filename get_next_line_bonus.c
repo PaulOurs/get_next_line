@@ -6,7 +6,7 @@
 /*   By: paubello <paubello@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/20 02:21:17 by paubello          #+#    #+#             */
-/*   Updated: 2024/11/20 02:24:27 by paubello         ###   ########.fr       */
+/*   Updated: 2024/12/18 16:02:54 by paubello         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,26 +99,26 @@ static char	*ft_read_file(int fd, char **stash)
 
 char	*get_next_line(int fd)
 {
-	static char	*stash;
+	static char	*stash[4096];
 	char		*line;
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	if (!stash)
-		stash = ft_calloc(1, sizeof(char));
-	if (!stash)
+	if (!stash[fd])
+		stash[fd] = ft_calloc(1, sizeof(char));
+	if (!stash[fd])
 		return (NULL);
-	if (!ft_read_file(fd, &stash))
+	if (!ft_read_file(fd, &stash[fd]))
 	{
-		free(stash);
-		stash = NULL;
+		free(stash[fd]);
+		stash[fd] = NULL;
 		return (NULL);
 	}
-	line = ft_extract_line(&stash);
+	line = ft_extract_line(&stash[fd]);
 	if (!line)
 	{
-		free(stash);
-		stash = NULL;
+		free(stash[fd]);
+		stash[fd] = NULL;
 	}
 	return (line);
 }

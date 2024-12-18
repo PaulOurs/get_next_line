@@ -64,6 +64,7 @@ int	main(void)
 	create_test_file(test_filename);
 	test_file(test_filename);
 	test_file("test2.txt");
+	// test_file("bible.txt");
 
 	// Test invalid file descriptor
 	test_invalid_fd();
